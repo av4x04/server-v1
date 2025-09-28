@@ -2,15 +2,184 @@
 <!doctype html>
 <html>
   <head>
-    <title>Web Terminal</title>
+    <title>🚀 Web Terminal Pro</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm@4/css/xterm.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <style>
-      body { background-color: #000; }
-      #terminal { width: 100%; height: 100vh; }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      
+      body { 
+        background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        overflow: hidden;
+      }
+      
+      .header {
+        background: rgba(0, 0, 0, 0.8);
+        padding: 10px 20px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        border-bottom: 2px solid #00ff00;
+        backdrop-filter: blur(10px);
+      }
+      
+      .header-left {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+      }
+      
+      .logo {
+        color: #00ff00;
+        font-size: 20px;
+        font-weight: bold;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      
+      .status {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        color: #00ff00;
+        font-size: 14px;
+      }
+      
+      .status-dot {
+        width: 8px;
+        height: 8px;
+        background: #00ff00;
+        border-radius: 50%;
+        animation: pulse 2s infinite;
+      }
+      
+      @keyframes pulse {
+        0% { opacity: 1; }
+        50% { opacity: 0.5; }
+        100% { opacity: 1; }
+      }
+      
+      .header-right {
+        display: flex;
+        gap: 10px;
+      }
+      
+      .btn {
+        background: rgba(0, 255, 0, 0.1);
+        border: 1px solid #00ff00;
+        color: #00ff00;
+        padding: 8px 15px;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 14px;
+      }
+      
+      .btn:hover {
+        background: rgba(0, 255, 0, 0.2);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(0, 255, 0, 0.3);
+      }
+      
+      .terminal-container {
+        height: calc(100vh - 60px);
+        position: relative;
+        background: #1a1a1a;
+        border: 1px solid #333;
+        margin: 0;
+      }
+      
+      #terminal { 
+        width: 100%; 
+        height: 100%; 
+        padding: 10px;
+      }
+      
+      .terminal-tabs {
+        display: flex;
+        background: rgba(0, 0, 0, 0.5);
+        border-bottom: 1px solid #333;
+        padding: 0 10px;
+      }
+      
+      .tab {
+        background: rgba(0, 255, 0, 0.1);
+        border: 1px solid #00ff00;
+        border-bottom: none;
+        color: #00ff00;
+        padding: 8px 15px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 12px;
+        border-radius: 5px 5px 0 0;
+        margin-right: 2px;
+      }
+      
+      .tab.active {
+        background: rgba(0, 255, 0, 0.2);
+      }
+      
+      .tab:hover {
+        background: rgba(0, 255, 0, 0.15);
+      }
+      
+      .tab-close {
+        margin-left: 5px;
+        opacity: 0.7;
+      }
+      
+      .tab-close:hover {
+        opacity: 1;
+        color: #ff4444;
+      }
     </style>
   </head>
   <body>
-    <div id="terminal"></div>
+    <div class="header">
+      <div class="header-left">
+        <div class="logo">
+          <i class="fas fa-terminal"></i>
+          Web Terminal Pro
+        </div>
+        <div class="status">
+          <div class="status-dot"></div>
+          <span id="status-text">Đang kết nối...</span>
+        </div>
+      </div>
+      <div class="header-right">
+        <button class="btn" onclick="newTerminal()">
+          <i class="fas fa-plus"></i>
+          Terminal Mới
+        </button>
+        <button class="btn" onclick="toggleFullscreen()">
+          <i class="fas fa-expand"></i>
+          Toàn Màn Hình
+        </button>
+      </div>
+    </div>
+    
+    <div class="terminal-tabs" id="terminal-tabs">
+      <div class="tab active">
+        <i class="fas fa-terminal"></i>
+        Terminal 24/7
+        <span class="tab-close" onclick="closeTerminal()">×</span>
+      </div>
+    </div>
+    
+    <div class="terminal-container" id="terminal-container">
+      <div id="terminal"></div>
+    </div>
 
     <script src="/socket.io/socket.io.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/xterm@4/lib/xterm.js"></script>
