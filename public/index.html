@@ -1,0 +1,19 @@
+<!-- public/index.html -->
+<!doctype html>
+<html>
+  <head>
+    <title>Web Terminal</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm@4/css/xterm.css" />
+    <style>
+      body { background-color: #000; }
+      #terminal { width: 100%; height: 100vh; }
+    </style>
+  </head>
+  <body>
+    <div id="terminal"></div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xterm@4/lib/xterm.js"></script>
+    <script src="/client.js"></script>
+  </body>
+</html>
