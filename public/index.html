@@ -1,188 +1,496 @@
 <!-- public/index.html -->
 <!doctype html>
-<html>
+<html lang="vi">
   <head>
-    <title>🚀 Web Terminal Pro</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Web Terminal Pro</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm@4/css/xterm.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <style>
-      * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
+      :root{
+        --bg:#0b0b0c;
+        --panel:#0f1113;
+        --muted:#8b8f92;
+        --accent:#00d084;
+        --accent-2:#00b37a;
+        --glass: rgba(255,255,255,0.03);
+        --glass-2: rgba(255,255,255,0.02);
+        --border: rgba(255,255,255,0.04);
+        --shadow: 0 10px 30px rgba(2,6,23,0.7);
+        --radius:12px;
+        font-synthesis: none;
       }
-      
-      body { 
-        background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        overflow: hidden;
+
+      *{box-sizing:border-box;margin:0;padding:0}
+      html,body{height:100%}
+      body{
+        background:
+          radial-gradient(1200px 600px at 10% 10%, rgba(0,0,0,0.6), transparent 8%),
+          radial-gradient(900px 450px at 90% 90%, rgba(10,10,12,0.7), transparent 6%),
+          var(--bg);
+        color:#e6eef2;
+        font-family: Inter, "Segoe UI", Roboto, system-ui, -apple-system, "Helvetica Neue", Arial;
+        -webkit-font-smoothing:antialiased;
+        -moz-osx-font-smoothing:grayscale;
+        overflow:hidden;
       }
-      
-      .header {
-        background: rgba(0, 0, 0, 0.8);
-        padding: 10px 20px;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        border-bottom: 2px solid #00ff00;
-        backdrop-filter: blur(10px);
+
+      /* App frame */
+      .app {
+        height:100vh;
+        display:flex;
+        flex-direction:column;
+        gap:18px;
+        padding:20px;
       }
-      
-      .header-left {
-        display: flex;
-        align-items: center;
-        gap: 15px;
+
+      /* Top bar */
+      .topbar{
+        display:flex;
+        align-items:center;
+        justify-content:space-between;
+        gap:12px;
       }
-      
-      .logo {
-        color: #00ff00;
-        font-size: 20px;
-        font-weight: bold;
-        display: flex;
-        align-items: center;
-        gap: 8px;
+
+      .brand {
+        display:flex;
+        align-items:center;
+        gap:14px;
       }
-      
-      .status {
-        display: flex;
-        align-items: center;
-        gap: 5px;
-        color: #00ff00;
-        font-size: 14px;
+
+      .logo-badge{
+        width:44px;height:44px;
+        background:linear-gradient(135deg,var(--accent),var(--accent-2));
+        border-radius:10px;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        box-shadow: 0 6px 20px rgba(0,208,132,0.12), inset 0 -2px 6px rgba(255,255,255,0.02);
       }
-      
-      .status-dot {
-        width: 8px;
-        height: 8px;
-        background: #00ff00;
-        border-radius: 50%;
-        animation: pulse 2s infinite;
+
+      .logo-badge i{color:#071014;font-size:18px}
+
+      .title{
+        display:flex;
+        flex-direction:column;
+        line-height:1;
       }
-      
-      @keyframes pulse {
-        0% { opacity: 1; }
-        50% { opacity: 0.5; }
-        100% { opacity: 1; }
+
+      .title .main{
+        font-weight:600;
+        font-size:15px;
+        color:#f6fbfd;
       }
-      
-      .header-right {
-        display: flex;
-        gap: 10px;
+
+      .title .sub{
+        font-size:12px;
+        color:var(--muted);
       }
-      
+
+      /* Controls */
+      .controls{
+        display:flex;
+        gap:10px;
+        align-items:center;
+      }
+
       .btn {
-        background: rgba(0, 255, 0, 0.1);
-        border: 1px solid #00ff00;
-        color: #00ff00;
-        padding: 8px 15px;
-        border-radius: 5px;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        display: flex;
-        align-items: center;
-        gap: 5px;
-        font-size: 14px;
+        background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+        border:1px solid var(--border);
+        color:var(--accent);
+        padding:8px 12px;
+        border-radius:9px;
+        display:inline-flex;
+        gap:8px;
+        align-items:center;
+        cursor:pointer;
+        font-size:13px;
+        transition: all 180ms ease;
+        box-shadow: 0 6px 18px rgba(2,6,23,0.45);
       }
-      
-      .btn:hover {
-        background: rgba(0, 255, 0, 0.2);
-        transform: translateY(-1px);
-        box-shadow: 0 4px 8px rgba(0, 255, 0, 0.3);
+
+      .btn:hover{
+        transform: translateY(-3px);
+        box-shadow: 0 18px 40px rgba(0,0,0,0.6);
+        background: linear-gradient(180deg, rgba(0,0,0,0.18), rgba(255,255,255,0.01));
       }
-      
-      .terminal-container {
-        height: calc(100vh - 60px);
-        position: relative;
-        background: #1a1a1a;
-        border: 1px solid #333;
-        margin: 0;
+
+      .btn.ghost{
+        color:var(--muted);
+        border:1px solid rgba(255,255,255,0.03);
+        background:transparent;
       }
-      
-      #terminal { 
-        width: 100%; 
-        height: 100%; 
-        padding: 10px;
+
+      /* Status */
+      .status {
+        display:flex;
+        align-items:center;
+        gap:10px;
+        padding:8px 12px;
+        border-radius:9px;
+        background: linear-gradient(90deg, rgba(255,255,255,0.01), rgba(255,255,255,0.00));
+        border:1px solid rgba(255,255,255,0.02);
+        color:var(--muted);
+        font-size:13px;
       }
-      
-      .terminal-tabs {
-        display: flex;
-        background: rgba(0, 0, 0, 0.5);
-        border-bottom: 1px solid #333;
-        padding: 0 10px;
+
+      .status-dot{
+        width:10px;height:10px;border-radius:50%;
+        background: linear-gradient(180deg,var(--accent),var(--accent-2));
+        box-shadow:0 6px 16px rgba(0,208,132,0.18);
+        animation:blink 2s infinite;
       }
-      
-      .tab {
-        background: rgba(0, 255, 0, 0.1);
-        border: 1px solid #00ff00;
-        border-bottom: none;
-        color: #00ff00;
-        padding: 8px 15px;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        gap: 5px;
-        font-size: 12px;
-        border-radius: 5px 5px 0 0;
-        margin-right: 2px;
+
+      @keyframes blink{
+        0%{opacity:1; transform:scale(1)}
+        50%{opacity:0.5; transform:scale(0.9)}
+        100%{opacity:1; transform:scale(1)}
       }
-      
-      .tab.active {
-        background: rgba(0, 255, 0, 0.2);
+
+      /* Main container */
+      .workspace{
+        display:flex;
+        gap:20px;
+        align-items:stretch;
+        flex:1;
+        min-height:0;
       }
-      
-      .tab:hover {
-        background: rgba(0, 255, 0, 0.15);
+
+      /* Left panel (tabs) */
+      .left-panel{
+        width:320px;
+        max-width:36%;
+        background: linear-gradient(180deg,var(--panel), rgba(255,255,255,0.01));
+        border-radius:var(--radius);
+        padding:14px;
+        border:1px solid var(--border);
+        box-shadow: var(--shadow);
+        display:flex;
+        flex-direction:column;
+        gap:12px;
       }
-      
-      .tab-close {
-        margin-left: 5px;
-        opacity: 0.7;
+
+      .tabs-header{
+        display:flex;
+        justify-content:space-between;
+        align-items:center;
       }
-      
-      .tab-close:hover {
-        opacity: 1;
-        color: #ff4444;
+
+      .tabs-title{
+        color:#dff8ed;
+        font-weight:600;
+        font-size:13px;
+      }
+
+      .tab-list{
+        display:flex;
+        flex-direction:column;
+        gap:10px;
+        margin-top:6px;
+        overflow:auto;
+        padding-right:6px;
+      }
+
+      .tab-item{
+        display:flex;
+        align-items:center;
+        gap:12px;
+        padding:10px;
+        border-radius:10px;
+        cursor:pointer;
+        transition: all 150ms ease;
+        border:1px solid transparent;
+        background:var(--glass);
+      }
+
+      .tab-item:hover{
+        transform: translateY(-3px);
+        background: linear-gradient(90deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+        border:1px solid rgba(255,255,255,0.03);
+      }
+
+      .tab-item.active{
+        background: linear-gradient(90deg, rgba(0,208,132,0.06), rgba(0,179,122,0.02));
+        border:1px solid rgba(0,208,132,0.12);
+        box-shadow: 0 12px 30px rgba(0,208,132,0.04);
+      }
+
+      .tab-meta{
+        display:flex;
+        flex-direction:column;
+        min-width:0;
+      }
+
+      .tab-name{ font-weight:600; color:#eafff5; font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis }
+      .tab-sub{ font-size:12px; color:var(--muted) }
+
+      .tab-actions{
+        margin-left:auto;
+        display:flex;
+        gap:8px;
+      }
+
+      .icon-circle{
+        width:34px;height:34px;border-radius:8px;
+        display:inline-flex;align-items:center;justify-content:center;
+        background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+        border:1px solid rgba(255,255,255,0.03);
+        color:var(--muted);
+        font-size:14px;
+      }
+
+      /* Right panel (terminal area) */
+      .right-panel{
+        flex:1;
+        min-height:0;
+        display:flex;
+        flex-direction:column;
+        gap:12px;
+      }
+
+      .terminal-card{
+        flex:1;
+        background: linear-gradient(180deg, rgba(8,8,10,0.9), rgba(14,14,16,0.95));
+        border-radius:14px;
+        padding:12px;
+        border:1px solid rgba(255,255,255,0.03);
+        box-shadow: 0 20px 60px rgba(2,6,23,0.6);
+        display:flex;
+        flex-direction:column;
+        min-height:0;
+        overflow:hidden;
+      }
+
+      .terminal-top{
+        display:flex;
+        align-items:center;
+        gap:12px;
+        padding:8px;
+        border-radius:10px;
+        background: linear-gradient(90deg, rgba(255,255,255,0.01), rgba(255,255,255,0.00));
+        border:1px solid rgba(255,255,255,0.02);
+      }
+
+      .window-controls{
+        display:flex;
+        gap:8px;
+        align-items:center;
+      }
+
+      .dot{
+        width:12px;height:12px;border-radius:50%;
+        background:transparent;border:1px solid rgba(255,255,255,0.03);
+      }
+
+      .dot.close{ background: linear-gradient(180deg,#ff7b7b,#ff5252) }
+      .dot.min{ background: linear-gradient(180deg,#ffd27a,#ffb84d) }
+      .dot.max{ background: linear-gradient(180deg,#7ef3b2,#2ad58a) }
+
+      /* xterm container */
+      #terminal{
+        flex:1;
+        margin-top:8px;
+        border-radius:10px;
+        overflow:hidden;
+        border:1px solid rgba(255,255,255,0.02);
+      }
+
+      /* footer / small hints */
+      .foot{
+        display:flex;
+        justify-content:space-between;
+        align-items:center;
+        gap:12px;
+        color:var(--muted);
+        font-size:13px;
+      }
+
+      .kbd{
+        background:rgba(255,255,255,0.02);
+        padding:6px 10px;
+        border-radius:8px;
+        border:1px solid rgba(255,255,255,0.02);
+        color:#dff8ed;
+        font-weight:600;
+        font-size:12px;
+      }
+
+      /* responsive */
+      @media (max-width:900px){
+        .left-panel{ display:none }
+        .app{ padding:14px }
+      }
+
+      /* small scrollbar cosmetic */
+      .tab-list::-webkit-scrollbar, .left-panel::-webkit-scrollbar{
+        width:8px;height:8px;
+      }
+      .tab-list::-webkit-scrollbar-thumb, .left-panel::-webkit-scrollbar-thumb{
+        background: rgba(255,255,255,0.04);
+        border-radius:999px;
       }
     </style>
   </head>
   <body>
-    <div class="header">
-      <div class="header-left">
-        <div class="logo">
-          <i class="fas fa-terminal"></i>
-          Web Terminal Pro
+    <div class="app">
+      <div class="topbar">
+        <div class="brand">
+          <div class="logo-badge"><i class="fas fa-terminal"></i></div>
+          <div class="title">
+            <div class="main">Web Terminal Pro</div>
+            <div class="sub">Giao diện tối, tối ưu cho ban đêm</div>
+          </div>
         </div>
-        <div class="status">
-          <div class="status-dot"></div>
-          <span id="status-text">Đang kết nối...</span>
+
+        <div style="display:flex;align-items:center;gap:12px">
+          <div class="status">
+            <div class="status-dot" id="status-dot"></div>
+            <div id="status-text">Đang kết nối...</div>
+          </div>
+
+          <div class="controls">
+            <button class="btn" onclick="newTerminal()" title="Mở terminal mới">
+              <i class="fas fa-plus"></i> Mới
+            </button>
+            <button class="btn ghost" onclick="toggleFullscreen()" title="Chế độ toàn màn hình">
+              <i class="fas fa-expand"></i> Toàn màn hình
+            </button>
+          </div>
         </div>
       </div>
-      <div class="header-right">
-        <button class="btn" onclick="newTerminal()">
-          <i class="fas fa-plus"></i>
-          Terminal Mới
-        </button>
-        <button class="btn" onclick="toggleFullscreen()">
-          <i class="fas fa-expand"></i>
-          Toàn Màn Hình
-        </button>
+
+      <div class="workspace">
+        <aside class="left-panel" aria-label="Terminal Tabs">
+          <div class="tabs-header">
+            <div class="tabs-title">Phiên</div>
+            <div style="display:flex;gap:8px">
+              <button class="btn" onclick="newTerminal()" title="Tạo terminal mới"><i class="fas fa-plus"></i></button>
+              <button class="btn ghost" onclick="clearAllTabs()" title="Đóng tất cả">X</button>
+            </div>
+          </div>
+
+          <div class="tab-list" id="terminal-tabs" role="list">
+            <div class="tab-item active" role="listitem" data-term="0" onclick="focusTab(event)">
+              <div class="icon-circle"><i class="fas fa-terminal"></i></div>
+              <div class="tab-meta">
+                <div class="tab-name">Terminal 24/7</div>
+                <div class="tab-sub">Kết nối mặc định</div>
+              </div>
+              <div class="tab-actions">
+                <button class="btn ghost" onclick="renameTab(event)">Sửa</button>
+                <button class="btn ghost" onclick="closeTerminal(event)">Đóng</button>
+              </div>
+            </div>
+          </div>
+        </aside>
+
+        <main class="right-panel">
+          <section class="terminal-card" aria-label="Terminal">
+            <div class="terminal-top">
+              <div class="window-controls">
+                <div class="dot close"></div>
+                <div class="dot min"></div>
+                <div class="dot max"></div>
+              </div>
+              <div style="margin-left:12px;font-weight:600;color:#dff8ef">Terminal</div>
+              <div style="margin-left:auto;color:var(--muted);font-size:13px">Shell: bash · UTF-8</div>
+            </div>
+
+            <div id="terminal"></div>
+
+            <div style="height:8px"></div>
+
+            <div class="foot">
+              <div style="display:flex;gap:8px;align-items:center">
+                <div class="kbd">Ctrl + C</div>
+                <div class="kbd">Ctrl + L</div>
+                <div style="color:var(--muted);font-size:13px">Dùng phím tắt để thao tác nhanh</div>
+              </div>
+              <div style="color:var(--muted);font-size:13px">Phiên hoạt động: <strong id="session-count">1</strong></div>
+            </div>
+          </section>
+        </main>
       </div>
-    </div>
-    
-    <div class="terminal-tabs" id="terminal-tabs">
-      <div class="tab active">
-        <i class="fas fa-terminal"></i>
-        Terminal 24/7
-        <span class="tab-close" onclick="closeTerminal()">×</span>
-      </div>
-    </div>
-    
-    <div class="terminal-container" id="terminal-container">
-      <div id="terminal"></div>
     </div>
 
     <script src="/socket.io/socket.io.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/xterm@4/lib/xterm.js"></script>
     <script src="/client.js"></script>
+
+    <script>
+      // Những hàm DOM nhỏ để giữ tương thích với script hiện tại.
+      // Nếu project đã có các hàm này trong client.js thì những hàm dưới đây sẽ không can thiệp.
+      function newTerminal(e){
+        if(e && e.stopPropagation) e.stopPropagation();
+        if(typeof window.createNewTerminal === 'function'){
+          window.createNewTerminal();
+          return;
+        }
+        // fallback: thêm tab tạm thời (UI only), client.js nên xử lý phiên thực sự
+        const tabs = document.getElementById('terminal-tabs');
+        const count = tabs.children.length;
+        const node = document.createElement('div');
+        node.className = 'tab-item';
+        node.setAttribute('data-term', count);
+        node.innerHTML = '<div class="icon-circle"><i class="fas fa-terminal"></i></div><div class="tab-meta"><div class="tab-name">Terminal ' + (count+1) + '</div><div class="tab-sub">Mới</div></div><div class="tab-actions"><button class="btn ghost" onclick="renameTab(event)">Sửa</button><button class="btn ghost" onclick="closeTerminal(event)">Đóng</button></div>';
+        node.onclick = focusTab;
+        tabs.appendChild(node);
+        document.getElementById('session-count').textContent = tabs.children.length;
+      }
+
+      function closeTerminal(e){
+        if(e && e.stopPropagation) e.stopPropagation();
+        if(typeof window.closeActiveTerminal === 'function'){
+          window.closeActiveTerminal();
+          return;
+        }
+        const target = e && e.currentTarget ? e.currentTarget.closest('.tab-item') : document.querySelector('.tab-item.active');
+        if(!target) return;
+        target.remove();
+        const tabs = document.getElementById('terminal-tabs');
+        if(tabs.children.length) tabs.children[0].classList.add('active');
+        document.getElementById('session-count').textContent = tabs.children.length;
+      }
+
+      function focusTab(e){
+        if(e && e.stopPropagation) e.stopPropagation();
+        const el = e && e.currentTarget ? e.currentTarget : (e.target || this);
+        const item = el.closest ? el.closest('.tab-item') : el;
+        if(!item) return;
+        document.querySelectorAll('.tab-item').forEach(t=>t.classList.remove('active'));
+        item.classList.add('active');
+        // notify client.js if cần
+        if(typeof window.focusTerminal === 'function') window.focusTerminal(item.getAttribute('data-term'));
+      }
+
+      function renameTab(e){
+        if(e && e.stopPropagation) e.stopPropagation();
+        const item = e.currentTarget.closest('.tab-item');
+        const nameEl = item.querySelector('.tab-name');
+        const newName = prompt('Đặt tên cho phiên', nameEl.textContent);
+        if(newName) nameEl.textContent = newName;
+      }
+
+      function clearAllTabs(){
+        const tabs = document.getElementById('terminal-tabs');
+        tabs.innerHTML = '';
+        document.getElementById('session-count').textContent = 0;
+      }
+
+      function toggleFullscreen(){
+        if(document.fullscreenElement){
+          document.exitFullscreen();
+        } else {
+          document.documentElement.requestFullscreen();
+        }
+      }
+
+      // small initial adjustments to keep compatibility with existing xterm usage
+      window.addEventListener('load', ()=>{
+        const termEl = document.getElementById('terminal');
+        if(termEl) termEl.style.background = 'transparent';
+      });
+    </script>
   </body>
 </html>
