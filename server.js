@@ -4,7 +4,7 @@ const http = require('http')
 const { Server } = require('socket.io')
 const pty = require('node-pty')
 const os = require('os')
-const { v4: uuidv4 } = require('uuid')
+const { randomUUID } = require('crypto')
 
 const app = express()
 const server = http.createServer(app)
@@ -17,9 +17,9 @@ const io = new Server(server, {
 })
 
 const SHELL = os.platform() === 'win32' ? 'powershell.exe' : 'bash'
-const HISTORY_LIMIT = 1024 * 512 // 512KB
+const HISTORY_LIMIT = 1024 * 512  // 512KB
 
-// RingBuffer lưu history mỗi session
+// RingBuffer lưu giữ history output
 class RingBuffer {
   constructor(limitBytes) {
     this.buf = Buffer.allocUnsafe(limitBytes)
@@ -64,7 +64,7 @@ class RingBuffer {
   }
 }
 
-// Token bucket tạo rate-limit trên mỗi socket
+// Token bucket đơn giản để rate-limit mỗi socket
 function createBucket(capacity = 4096, refillRate = 4096) {
   let tokens = capacity
   let last = Date.now()
@@ -85,8 +85,7 @@ function createBucket(capacity = 4096, refillRate = 4096) {
   }
 }
 
-// Map quản lý tất cả sessions
-// key: sessionId, value: { term, history, enqueueWrite }
+// Map lưu trữ các PTY session
 const sessions = new Map()
 
 app.use(express.static('public'))
@@ -95,7 +94,7 @@ io.on('connection', socket => {
   console.log('Client connected', socket.id)
   const bucket = createBucket()
 
-  // 1. List tất cả sessions hiện có
+  // Trả về danh sách session hiện có
   socket.on('list-sessions', () => {
     const list = Array.from(sessions.entries()).map(
       ([id, s]) => ({
@@ -109,9 +108,9 @@ io.on('connection', socket => {
     socket.emit('sessions', list)
   })
 
-  // 2. Tạo session mới
+  // Tạo session mới
   socket.on('new-session', () => {
-    const sessionId = uuidv4()
+    const sessionId = randomUUID()
     const history = new RingBuffer(HISTORY_LIMIT)
     const writeQueue = []
     let writing = false
@@ -135,7 +134,6 @@ io.on('connection', socket => {
       })()
     }
 
-    // spawn PTY riêng cho session
     const term = pty.spawn(SHELL, [], {
       name: 'xterm-color',
       cols: 80,
@@ -150,7 +148,7 @@ io.on('connection', socket => {
     })
 
     term.on('exit', code => {
-      console.log(`Session ${sessionId} exited code`, code)
+      console.log(`Session ${sessionId} exited with code`, code)
       io.to(sessionId).emit('session-closed', sessionId)
       sessions.delete(sessionId)
     })
@@ -165,25 +163,25 @@ io.on('connection', socket => {
     socket.emit('sessionCreated', sessionId)
   })
 
-  // 3. Join session hiện có
+  // Join vào session đã có
   socket.on('join', sessionId => {
     const s = sessions.get(sessionId)
     if (!s) return
     socket.join(sessionId)
-    // gửi history hiện tại
     const h = s.history.toString()
     if (h.length) socket.emit('history', h)
   })
 
-  // 4. Input data cho session
+  // Nhận input cho session
   socket.on('input', ({ sessionId, data }) => {
     const s = sessions.get(sessionId)
     if (!s) return
-    if (!bucket.take(Buffer.byteLength(String(data), 'utf8'))) return
+    const size = Buffer.byteLength(String(data), 'utf8')
+    if (!bucket.take(size)) return
     s.enqueueWrite(data)
   })
 
-  // 5. Resize PTY
+  // Resize PTY
   socket.on('resize', ({ sessionId, cols, rows }) => {
     const s = sessions.get(sessionId)
     if (!s) return
@@ -198,13 +196,9 @@ io.on('connection', socket => {
   })
 })
 
-// Global error & graceful shutdown handlers
-process.on('uncaughtException', err => {
-  console.error('Uncaught exception', err)
-})
-process.on('unhandledRejection', r => {
-  console.error('Unhandled rejection', r)
-})
+// Bắt lỗi toàn cục & graceful shutdown
+process.on('uncaughtException', err => console.error('Uncaught exception', err))
+process.on('unhandledRejection', r => console.error('Unhandled rejection', r))
 function shutdown() {
   console.log('Shutdown')
   for (const s of sessions.values()) {
@@ -215,7 +209,7 @@ function shutdown() {
 process.on('SIGINT', shutdown)
 process.on('SIGTERM', shutdown)
 
-// Khởi động server
+// Start server
 const PORT = process.env.PORT || 3000
 server.listen(PORT, () => {
   console.log(`Listening on http://localhost:${PORT}`)
